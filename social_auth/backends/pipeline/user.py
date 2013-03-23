@@ -81,6 +81,10 @@ def update_user_details(backend, details, response, user=None, is_new=False,
         if name in ('username', 'id', 'pk') or (not is_new and
            name in setting('SOCIAL_AUTH_PROTECTED_USER_FIELDS', [])):
             continue
+        field = user._meta.get_field(name)
+        if field and len(value) > field.max_length:
+            # The whole field can't fit in the DB. Truncate it instead of failing on user.save()
+            value = value[:field.max_length]
         if value and value != getattr(user, name, None):
             setattr(user, name, value)
             changed = True
